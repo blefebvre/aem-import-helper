@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import {greet} from '../rules/rules-helper.js';
+
 export function rulesCommand(yargs) {
   yargs.command({
     command: 'rules <name>',
@@ -21,8 +23,7 @@ export function rulesCommand(yargs) {
       });
     },
     handler: (argv) => {
-      console.log('Rules command invoked with name:', argv.name);
-      // Implement rules logic here
+      console.log(greet(argv.name));
     }
   });
 }
