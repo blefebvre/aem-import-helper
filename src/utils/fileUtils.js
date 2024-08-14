@@ -9,9 +9,19 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+import fs from 'fs';
+import path from 'path';
 
-const greet = (name) => {
-  return `Hello, ${name}!`;
-};
+export function readFromFile(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    return undefined;
+  }
+}
 
-export { greet };
+export function writeToFile(filePath, fileData) {
+  const dirPath = path.dirname(filePath);
+  fs.mkdirSync(dirPath, { recursive: true });
+  fs.writeFileSync(filePath, fileData, 'utf8');
+}
