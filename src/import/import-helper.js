@@ -87,15 +87,20 @@ async function runImportJobAndPoll( {
   async function startJob() {
     const requestBody = new FormData();
     requestBody.append('urls', JSON.stringify(urls));
-    if (options) {
+    const { headers, ...restOptions } = options || {};
+    if (restOptions) {
       // Conditionally include options, when provided
-      requestBody.append('options', JSON.stringify(options));
+      requestBody.append('options', JSON.stringify(restOptions));
+    }
+    if (headers) {
+      // Conditionally include custom headers, when provided
+      requestBody.append('customHeaders', JSON.stringify(headers));
     }
     if (importJsPath) {
       // Conditionally include the custom (bundled) import.js, when provided
       const bundledCode = prepareImportScript(importJsPath);
-      const importScriptBlob = new Blob([bundledCode], { type: 'application/javascript' });
-      requestBody.append('importScript', importScriptBlob, path.basename(importJsPath));
+      const bundledScriptBlob = new Blob([bundledCode], { type: 'application/javascript' });
+      requestBody.append('importScript', bundledScriptBlob, path.basename(importJsPath));
     }
 
     try {
