@@ -13,7 +13,7 @@ import esbuild from 'esbuild';
 import fs from 'fs';
 
 /**
- * Prepares the given import script by bundling it up and saving to the filesystem.
+ * Prepares the given import script by bundling it up.
  * @param {string} importJsPath - Path on the filesystem to the import.js entry point
  * @returns {string} - import.js bundle
  */
