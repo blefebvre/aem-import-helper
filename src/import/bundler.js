@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 import esbuild from 'esbuild';
-import fs from 'fs';
 
 /**
  * Prepares the given import script by bundling it up.
