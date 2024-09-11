@@ -46,7 +46,7 @@ export function importCommand(yargs) {
         stage
       } = argv;
 
-      // Ensure environment variables is set
+      // Ensure required environment variable is set
       if (!process.env.AEM_IMPORT_API_KEY) {
         console.error(chalk.red('Error: Ensure the AEM_IMPORT_API_KEY environment variable is set.'));
         process.exit(1);

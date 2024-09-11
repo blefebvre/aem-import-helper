@@ -33,7 +33,7 @@ describe('prepareImportScript tests', () => {
     sinon.restore();
   });
 
-  it('should return a bundled the import script', () => {
+  it('should return a bundled import script', () => {
     const result = prepareImportScript('path/to/import.js', { save: false });
 
     expect(buildSyncStub.calledOnceWith({
