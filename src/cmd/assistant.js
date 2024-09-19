@@ -14,6 +14,7 @@ import {
   runRemovalAssistant,
   runBlockAssistant,
   runStartAssistant,
+  runCellAssistant,
 } from '../assistant/assistant-helper.js';
 
 export function assistantCommand(yargs) {
@@ -63,8 +64,51 @@ export function assistantCommand(yargs) {
       .command({
         command: 'block',
         describe: 'Builds the transformation rules for page blocks.',
+        builder: (yargs) => {
+          return yargs
+          .option('name', {
+            describe: 'The name of the block',
+            type: 'string',
+            demandOption: true
+          })
+          .option('prompt', {
+            describe: 'Prompt for block to find',
+            type: 'string',
+            demandOption: true
+          });
+        },
         handler: (argv) => {
-          runBlockAssistant(argv.url);
+          runBlockAssistant({
+            url: argv.url,
+            name: argv.name,
+            prompt: argv.prompt,
+            outputPath: argv.outputPath
+          });
+        }
+      })
+      .command({
+        command: 'cells',
+        describe: 'Builds the cell rules for a block.',
+        builder: (yargs) => {
+          return yargs
+          .option('name', {
+            describe: 'The name of the block',
+            type: 'string',
+            demandOption: true
+          })
+          .option('prompt', {
+            describe: 'Prompt for cells to include',
+            type: 'string',
+            demandOption: true
+          });
+        },
+        handler: (argv) => {
+          runCellAssistant({
+            url: argv.url,
+            name: argv.name,
+            prompt: argv.prompt,
+            outputPath: argv.outputPath
+          });
         }
       });
     }

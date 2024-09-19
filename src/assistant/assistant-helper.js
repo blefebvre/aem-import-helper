@@ -28,7 +28,7 @@ const getRules = async (outputPath) => {
   return rulesModule.default;
 }
 
-const getBuilder = async (url, {rules, documents}) => {
+const getBuilder = async (url, {useExisting = false, outputPath}) => {
   console.log(chalk.magenta('Import assistant is analyzing the page...'));
   const factory = ImportBuilderFactory();
   const spinner = ora({ text: 'Initializing...', color: 'yellow' });
@@ -41,6 +41,8 @@ const getBuilder = async (url, {rules, documents}) => {
   factory.on('complete', () => {
     spinner.succeed();
   });
+  const documents = useExisting ? getDocumentSet(outputPath) : undefined;
+  const rules = useExisting? await getRules(outputPath) : undefined;
   return factory.create(url, {mode: 'script', rules, documents});
 }
 
@@ -51,31 +53,43 @@ const writeManifestFiles = (manifest, outputPath) => {
   });
 }
 
+const getDurationText = (startTime) => {
+  const duration = Date.now() - startTime;
+  const minutes = Math.floor(duration / 6000);
+  const seconds = ((duration % 6000) / 1000).toFixed(2);
+  return `${minutes} minutes ${seconds} seconds`;
+}
+
 const runStartAssistant = async ({url, outputPath = IMPORTER_PATH}) => {
   const startTime = Date.now();
   const builder = await getBuilder(url, {outputPath});
   const manifest = await builder.buildProject();
   writeManifestFiles(manifest, outputPath);
-  const duration = Date.now() - startTime;
-  const minutes = Math.floor(duration / 6000);
-  const seconds = ((duration % 6000) / 1000).toFixed(2);
-  console.log(chalk.green(`Import scripts generated successfully in ${minutes} minutes ${seconds} seconds`));
+  console.log(chalk.green(`Import scripts generated successfully in ${getDurationText(startTime)}`));
 };
 
 const runRemovalAssistant = async ({url, prompt, outputPath = IMPORTER_PATH}) => {
-  const docSet = getDocumentSet(outputPath);
-  const importRules = await getRules(outputPath);
-  const builder = await getBuilder(url, {outputPath, rules: importRules, documents: docSet});
+  const startTime = Date.now();
+  const builder = await getBuilder(url, {useExisting:  true, outputPath});
   const manifest = await builder.addCleanup(prompt);
   writeManifestFiles(manifest, outputPath);
-  console.log(chalk.green('Removal script generated successfully'));
+  console.log(chalk.green(`Removal script generated successfully in ${getDurationText(startTime)}`));
 };
 
-const runBlockAssistant = async ({url, outputPath = IMPORTER_PATH}) => {
-  const builder = await getBuilder(url, {outputPath});
-  const manifest = await builder.buildBlocks();
+const runBlockAssistant = async ({url, name, prompt, outputPath = IMPORTER_PATH}) => {
+  const startTime = Date.now();
+  const builder = await getBuilder(url, {useExisting:  true, outputPath});
+  const manifest = await builder.addBlock(name, prompt);
   writeManifestFiles(manifest, outputPath);
-  console.log(chalk.green('Block scripts generated successfully'));
+  console.log(chalk.green(`Block scripts generated successfully in ${getDurationText(startTime)}`));
 };
 
-export { runRemovalAssistant, runBlockAssistant, runStartAssistant };
+const runCellAssistant = async ({url, name, prompt, outputPath = IMPORTER_PATH}) => {
+  const startTime = Date.now();
+  const builder = await getBuilder(url, {useExisting:  true, outputPath});
+  const manifest = await builder.addCells(name, prompt);
+  writeManifestFiles(manifest, outputPath);
+  console.log(chalk.green(`${name} block parser generated successfully in ${getDurationText(startTime)}`));
+};
+
+export { runRemovalAssistant, runBlockAssistant, runStartAssistant, runCellAssistant };
