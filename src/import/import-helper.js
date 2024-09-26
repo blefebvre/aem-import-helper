@@ -16,12 +16,14 @@ import { Blob } from 'buffer';
 import { URL } from 'url';
 import prepareImportScript from './bundler.js';
 import chalk from 'chalk';
+import { uploadZipFromS3ToSharePoint } from './sharepoint-uploader.js';
 
 /**
  * Run the import job and begin polling for the result. Logs progress & result to the console.
  * @param {Array<string>} urls - Array of URLs to import
  * @param {object} options - Optional object with import options
  * @param {string} importJsPath - Optional path to the custom import.js file
+ * @param {string} sharePointUploadUrl - SharePoint URL to upload imported files to
  * @param {boolean} stage - Set to true if stage APIs should be used
  * @returns {Promise<void>}
  */
@@ -29,12 +31,17 @@ async function runImportJobAndPoll( {
   urls,
   importJsPath,
   options,
+  sharePointUploadUrl,
   stage = false
 } ) {
   // Determine the base URL
   const baseURL = stage
     ? 'https://spacecat.experiencecloud.live/api/ci/tools/import/jobs'
     : 'https://spacecat.experiencecloud.live/api/v1/tools/import/jobs';
+
+  function hasProvidedSharePointUrl() {
+    return typeof sharePointUploadUrl === 'string';
+  }
 
   // Function to make HTTP requests
   async function makeRequest(url, method, data) {
@@ -64,18 +71,28 @@ async function runImportJobAndPoll( {
   async function pollJobStatus(jobId) {
     const url = `${baseURL}/${jobId}`;
     while (true) {
+      // Wait before polling
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       try {
         const jobStatus = await makeRequest(url, 'GET');
         if (jobStatus.status !== 'RUNNING') {
+          // Job is finished!
           console.log(chalk.green('Job completed:'), jobStatus);
 
           // Print the job result's downloadUrl
           const jobResult = await makeRequest(`${url}/result`, 'POST');
           console.log(chalk.green('Download the import archive:'), jobResult.downloadUrl);
+
+          if (hasProvidedSharePointUrl()) {
+            // Upload the import archive to SharePoint
+            await uploadZipFromS3ToSharePoint(jobResult.downloadUrl, sharePointUploadUrl);
+          }
           break;
         }
-        console.log(chalk.yellow('Job status:'), jobStatus.status);
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait before polling again
+
+        const progressUrl = `${url}/progress`;
+        const jobProgress = await makeRequest(progressUrl, 'GET');
+        console.log(chalk.yellow('Job status:'), jobStatus.status, jobProgress);
       } catch (error) {
         console.error(chalk.red('Error polling job status:'), error);
         break;
