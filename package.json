@@ -40,9 +40,10 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "aws-sdk-mock": "^6.2.0",
     "chai": "^5.1.1",
     "esmock": "^2.6.7",
     "mocha": "^10.7.3",
-    "sinon": "^18.0.0"
+    "sinon": "^18.0.1"
   }
 }
