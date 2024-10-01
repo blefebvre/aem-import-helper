@@ -113,9 +113,20 @@ export async function runImportJobAndPoll( {
     }
   }
 
+  if (!Array.isArray(urls) || urls.length === 0) {
+    throw new Error('No URLs provided');
+  }
+
   return startJob();
 }
 
+/**
+ * Upload the result of an import job to SharePoint.
+ * @param {string} jobId - ID of the job to upload
+ * @param {string} sharePointUploadUrl - SharePoint URL to upload imported files to
+ * @param {boolean} stage - Set to true if stage APIs should be used
+ * @returns {Promise<void>}
+ */
 export async function uploadJobResult({ jobId, sharePointUploadUrl, stage = false }) {
   // Fetch the job result
   const jobResult = await getJobResult(jobId, stage);
