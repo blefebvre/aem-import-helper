@@ -35,6 +35,7 @@ async function getJobResult(jobId, stage) {
  * @param {string} importJsPath - Optional path to the custom import.js file
  * @param {string} sharePointUploadUrl - SharePoint URL to upload imported files to
  * @param {boolean} stage - Set to true if stage APIs should be used
+ * @param {number} pollInterval - Time to wait between polling requests
  * @returns {Promise<void>}
  */
 export async function runImportJobAndPoll( {
@@ -42,7 +43,8 @@ export async function runImportJobAndPoll( {
   importJsPath,
   options,
   sharePointUploadUrl,
-  stage = false
+  stage = false,
+  pollInterval = 5000,
 } ) {
   // Determine the base URL
   const baseURL = getApiBaseUrl(stage);
@@ -56,7 +58,7 @@ export async function runImportJobAndPoll( {
     const url = `${baseURL}/${jobId}`;
     while (true) {
       // Wait before polling
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
       try {
         const jobStatus = await makeRequest(url, 'GET');
         if (jobStatus.status !== 'RUNNING') {
