@@ -10,22 +10,23 @@
  * governing permissions and limitations under the License.
  */
 
-import path from 'path';
-import {copyFiles} from '../utils/fileUtils.js';
+import {readFromFile, writeToFile} from '../utils/fileUtils.js';
 
-const port = 3009;
+const FILENAME = 'documentSet.json';
 
-export function getPort() {
-  return port;
+const getDocumentSet = (outputPath) => {
+  const manifestText = readFromFile(`.${outputPath}/${FILENAME}`);
+  const manifestArray = manifestText ? JSON.parse(manifestText) : [];
+  return new Set(manifestArray);
 }
 
-export function getBaseUrl() {
-  return `http://localhost:${port}`;
+const writeDocumentSet = (outputPath, documentSet) => {
+  const manifestArray = Array.from(documentSet);
+  const manifestText = JSON.stringify(manifestArray, null, 2);
+  writeToFile(`.${outputPath}/${FILENAME}`, manifestText);
 }
 
-export function copyTemplates(outputPath) {
-  // Copy templates to server root
-  const srcDir = path.join(process.cwd(), 'node_modules', 'aem-import-builder', 'dist', 'templates');
-  const destDir = path.join(process.cwd(), outputPath, 'templates');
-  copyFiles(srcDir, destDir);
+export {
+  getDocumentSet,
+  writeDocumentSet,
 }

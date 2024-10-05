@@ -16,6 +16,7 @@ import {
   runStartAssistant,
   runCellAssistant,
 } from '../assistant/assistant-helper.js';
+import chalk from 'chalk';
 
 export function assistantCommand(yargs) {
   yargs.command({
@@ -36,11 +37,16 @@ export function assistantCommand(yargs) {
         command: 'start',
         describe: 'Start a new import project.',
         handler: async (argv) => {
-          await runStartAssistant({
-            url: argv.url,
-            outputPath: argv.outputPath
-          });
-          process.exit(0);
+          try {
+            await runStartAssistant({
+              url: argv.url,
+              outputPath: argv.outputPath
+            });
+            process.exit(0);
+          } catch (error) {
+            console.error(chalk.red(`Error: ${error.message}`));
+            process.exit(1);
+          }
         }
       })
       .command({
@@ -55,12 +61,17 @@ export function assistantCommand(yargs) {
           });
         },
         handler: async (argv) => {
-          await runRemovalAssistant({
-            url: argv.url,
-            prompt: argv.prompt,
-            outputPath: argv.outputPath
-          });
+          try {
+            await runRemovalAssistant({
+              url: argv.url,
+              prompt: argv.prompt,
+              outputPath: argv.outputPath
+            });
           process.exit(0);
+          } catch (error) {
+            console.error(chalk.red(`Error: ${error.message}`));
+            process.exit(1);
+          }
         }
       })
       .command({
@@ -80,13 +91,18 @@ export function assistantCommand(yargs) {
           });
         },
         handler: async (argv) => {
-          await runBlockAssistant({
-            url: argv.url,
-            name: argv.name,
-            prompt: argv.prompt,
-            outputPath: argv.outputPath
-          });
+          try {
+            await runBlockAssistant({
+              url: argv.url,
+              name: argv.name,
+              prompt: argv.prompt,
+              outputPath: argv.outputPath
+            });
           process.exit(0);
+          } catch (error) {
+            console.error(chalk.red(`Error: ${error.message}`));
+            process.exit(1);
+          }
         }
       })
       .command({
@@ -106,13 +122,18 @@ export function assistantCommand(yargs) {
           });
         },
         handler: async (argv) => {
-          await runCellAssistant({
-            url: argv.url,
-            name: argv.name,
-            prompt: argv.prompt,
-            outputPath: argv.outputPath
-          });
-          process.exit(0);
+          try {
+            await runCellAssistant({
+              url: argv.url,
+              name: argv.name,
+              prompt: argv.prompt,
+              outputPath: argv.outputPath
+            });
+            process.exit(0);
+          } catch (error) {
+            console.error(chalk.red(`Error: ${error.message}`));
+            process.exit(1);
+          }
         }
       });
     }

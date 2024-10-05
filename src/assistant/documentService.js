@@ -102,9 +102,7 @@ export const fetchDocument = async (url, options = {}) => {
     }
 
     // write the document and screenshot back to the manifest
-    if (documentEntry) {
-      documentEntry.content = documentContent;
-    } else {
+    if (!documentEntry) {
       documents.add({
         url,
         content: documentContent,
