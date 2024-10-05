@@ -16,66 +16,67 @@ import { Blob } from 'buffer';
 import { URL } from 'url';
 import prepareImportScript from './bundler.js';
 import chalk from 'chalk';
+import { uploadZipFromS3ToSharePoint } from './sharepoint-uploader.js';
+import { makeRequest } from '../utils/http-utils.js';
+
+function getApiBaseUrl(stage) {
+  const alias = stage ? 'ci' : 'v1';
+  return `https://spacecat.experiencecloud.live/api/${alias}/tools/import/jobs`;
+}
+
+async function getJobResult(jobId, stage) {
+  return makeRequest(`${getApiBaseUrl(stage)}/${jobId}/result`, 'POST');
+}
 
 /**
  * Run the import job and begin polling for the result. Logs progress & result to the console.
  * @param {Array<string>} urls - Array of URLs to import
  * @param {object} options - Optional object with import options
  * @param {string} importJsPath - Optional path to the custom import.js file
+ * @param {string} sharePointUploadUrl - SharePoint URL to upload imported files to
  * @param {boolean} stage - Set to true if stage APIs should be used
  * @returns {Promise<void>}
  */
-async function runImportJobAndPoll( {
+export async function runImportJobAndPoll( {
   urls,
   importJsPath,
   options,
+  sharePointUploadUrl,
   stage = false
 } ) {
   // Determine the base URL
-  const baseURL = stage
-    ? 'https://spacecat.experiencecloud.live/api/ci/tools/import/jobs'
-    : 'https://spacecat.experiencecloud.live/api/v1/tools/import/jobs';
+  const baseURL = getApiBaseUrl(stage);
 
-  // Function to make HTTP requests
-  async function makeRequest(url, method, data) {
-    const parsedUrl = new URL(url);
-    const headers = new Headers({
-      'Content-Type': data ? 'application/json' : '',
-      'x-api-key': process.env.AEM_IMPORT_API_KEY,
-    });
-    if (data instanceof FormData) {
-      headers.delete('Content-Type');
-    }
-    const res = await fetch(parsedUrl, {
-      method,
-      headers,
-      body: data,
-    });
-    if (res.ok) {
-      return res.json();
-    }
-    const body = await res.text();
-    throw new Error(`Request failed with status code ${res.status}. `
-        + `x-error header: ${res.headers.get('x-error')}, x-invocation-id: ${res.headers.get('x-invocation-id')}, `
-        + `Body: ${body}`);
+  function hasProvidedSharePointUrl() {
+    return typeof sharePointUploadUrl === 'string';
   }
 
   // Function to poll job status
   async function pollJobStatus(jobId) {
     const url = `${baseURL}/${jobId}`;
     while (true) {
+      // Wait before polling
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       try {
         const jobStatus = await makeRequest(url, 'GET');
         if (jobStatus.status !== 'RUNNING') {
+          // Job is finished!
           console.log(chalk.green('Job completed:'), jobStatus);
 
           // Print the job result's downloadUrl
-          const jobResult = await makeRequest(`${url}/result`, 'POST');
+          const jobResult = await getJobResult(jobId, stage);
           console.log(chalk.green('Download the import archive:'), jobResult.downloadUrl);
+
+          if (hasProvidedSharePointUrl()) {
+            // Upload the import archive to SharePoint
+            await uploadZipFromS3ToSharePoint(jobResult.downloadUrl, sharePointUploadUrl);
+          }
           break;
         }
-        console.log(chalk.yellow('Job status:'), jobStatus.status);
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait before polling again
+
+        const progressUrl = `${url}/progress`;
+        const jobProgress = await makeRequest(progressUrl, 'GET');
+        console.log(chalk.yellow('Job status:'), jobStatus.status, jobProgress);
       } catch (error) {
         console.error(chalk.red('Error polling job status:'), error);
         break;
@@ -115,4 +116,10 @@ async function runImportJobAndPoll( {
   return startJob();
 }
 
-export default runImportJobAndPoll;
+export async function uploadJobResult({ jobId, sharePointUploadUrl, stage = false }) {
+  // Fetch the job result
+  const jobResult = await getJobResult(jobId, stage);
+
+  // Upload the import archive to SharePoint
+  await uploadZipFromS3ToSharePoint(jobResult.downloadUrl, sharePointUploadUrl);
+}

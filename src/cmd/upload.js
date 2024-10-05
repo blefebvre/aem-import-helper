@@ -12,26 +12,17 @@
 
 import fs from 'fs';
 import chalk from 'chalk';
-import { runImportJobAndPoll } from '../import/import-helper.js';
+import { uploadJobResult } from '../import/import-helper.js';
 import { checkEnvironment } from '../utils/env-utils.js';
 
-export function importCommand(yargs) {
+export function uploadCommand(yargs) {
   yargs.command({
-    command: 'import',
-    describe: 'Start an import job',
+    command: 'upload',
+    describe: 'Upload the result of an import job',
     builder: (yargs) => {
       return yargs
-      .option('urls', {
-        describe: 'path to urls file',
-        type: 'string',
-        demandOption: true
-      })
-      .option('options', {
-        describe: 'options as a JSON string',
-        type: 'string'
-      })
-      .option('importjs', {
-        describe: 'path to import script',
+      .option('jobid', {
+        describe: 'ID of the job to upload',
         type: 'string'
       })
       .option('sharepointurl', {
@@ -45,37 +36,21 @@ export function importCommand(yargs) {
     },
     handler: async (argv) => {
       const {
-        urls: urlsPath,
-        options: optionsString,
-        importjs: importJsPath,
+        jobid: jobId,
         sharepointurl: sharePointUploadUrl,
         stage
       } = argv;
 
       checkEnvironment(process.env);
 
-      // Read URLs from the file
-      const urls = fs.readFileSync(urlsPath, 'utf8').split('\n').filter(Boolean);
-
-      // Parse the options object
-      let options;
-      if (optionsString) {
-        try {
-          options = JSON.parse(optionsString);
-        } catch (error) {
-          console.error(chalk.red('Error: Invalid options JSON.'));
-          process.exit(1);
-        }
-      }
-
-      // Run the import job
+      // Process the upload request
       try {
-        await runImportJobAndPoll({ urls, options, importJsPath, sharePointUploadUrl, stage } );
+        await uploadJobResult({jobId, sharePointUploadUrl, stage});
         console.log(chalk.green('Done.'));
-      } catch(error) {
+      } catch (error) {
         console.error(chalk.red(`Error: ${error.message}`));
         process.exit(1);
-      };
+      }
     }
   });
 }
