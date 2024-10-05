@@ -25,3 +25,20 @@ export function writeToFile(filePath, fileData) {
   fs.mkdirSync(dirPath, { recursive: true });
   fs.writeFileSync(filePath, fileData, 'utf8');
 }
+
+export function copyFiles(srcDir, destDir) {
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  fs.readdirSync(srcDir).forEach(file => {
+    const srcFile = path.join(srcDir, file);
+    const destFile = path.join(destDir, file);
+
+    if (fs.lstatSync(srcFile).isDirectory()) {
+      copyFiles(srcFile, destDir);
+    } else {
+      fs.copyFileSync(srcFile, destFile);
+    }
+  });
+}

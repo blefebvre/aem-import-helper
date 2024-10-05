@@ -35,11 +35,12 @@ export function assistantCommand(yargs) {
       .command({
         command: 'start',
         describe: 'Start a new import project.',
-        handler: (argv) => {
-          runStartAssistant({
+        handler: async (argv) => {
+          await runStartAssistant({
             url: argv.url,
             outputPath: argv.outputPath
           });
+          process.exit(0);
         }
       })
       .command({
@@ -53,12 +54,13 @@ export function assistantCommand(yargs) {
             demandOption: true
           });
         },
-        handler: (argv) => {
-          runRemovalAssistant({
+        handler: async (argv) => {
+          await runRemovalAssistant({
             url: argv.url,
             prompt: argv.prompt,
             outputPath: argv.outputPath
           });
+          process.exit(0);
         }
       })
       .command({
@@ -77,13 +79,14 @@ export function assistantCommand(yargs) {
             demandOption: true
           });
         },
-        handler: (argv) => {
-          runBlockAssistant({
+        handler: async (argv) => {
+          await runBlockAssistant({
             url: argv.url,
             name: argv.name,
             prompt: argv.prompt,
             outputPath: argv.outputPath
           });
+          process.exit(0);
         }
       })
       .command({
@@ -102,13 +105,14 @@ export function assistantCommand(yargs) {
             demandOption: true
           });
         },
-        handler: (argv) => {
-          runCellAssistant({
+        handler: async (argv) => {
+          await runCellAssistant({
             url: argv.url,
             name: argv.name,
             prompt: argv.prompt,
             outputPath: argv.outputPath
           });
+          process.exit(0);
         }
       });
     }
