@@ -88,13 +88,6 @@ The `import.js` file you provide will be bundled with any locally referenced scr
 
 Run AI-enabled commands to assist with your import script development.
 
-Set your environment variables (either in your shell profile or in a `.env` file):
-
-```
-export IMS_AUTH_CODE=<your ims auth code>
-export IMS_CLIENT_SECRET=<your ims client secret>
-```
-
 Add an npm script entry to your Edge Delivery project's `package.json`:
 
 ```

@@ -142,8 +142,8 @@ const runCellAssistant = async ({url, name, prompt, outputPath = DEFAULT_IMPORTE
 };
 
 export {
+  runStartAssistant,
   runRemovalAssistant,
   runBlockAssistant,
-  runStartAssistant,
   runCellAssistant
 };
